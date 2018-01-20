@@ -1,7 +1,9 @@
 package proxy.own.com.androidproxydynamic.annotation;
 
 import android.app.Activity;
+import android.view.View;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
@@ -34,11 +36,33 @@ public class InjectUtils {
             try {
                 Method method = activityClass.getMethod("setContentView", int.class);
                 //执行acitivty上的方法
-                method.invoke(activityClass,contentView.value());
+                method.invoke(activity,contentView.value());
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
+        }
+    }
+
+    public static void injectView(Activity activity){
+        Class<? extends Activity> aClass = activity.getClass();
+        //获取当前activity身上所有的属性
+        Field[] fields = aClass.getDeclaredFields();
+
+        for(Field field:fields){
+            //获取注入视图的注解
+            ViewInject viewInject = field.getAnnotation(ViewInject.class);
+            if(viewInject != null){
+                int viewId = viewInject.value();
+                View view = activity.findViewById(viewId);
+                //绑定
+                field.setAccessible(true);
+                try {
+                    field.set(activity,view);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }
